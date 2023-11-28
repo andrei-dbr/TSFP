@@ -1,6 +1,9 @@
 module Evaluation.Big where
 
 import Syntax.Expression
+import Data.List
+import qualified Data.Map as M
+import Data.Tuple (swap)
 
 {-|
     Big-step evaluation of a given expression, within a given context.
@@ -15,7 +18,11 @@ evalBig :: (Expression -> Context -> (Expression, Context))  -- ^ Small-stepper
         -> (Expression, Context)  -- ^ Evaluation result,
                                   --   together with a possibly enriched context
                                   --   in case of definition
-evalBig = undefined
+evalBig eval expr context
+    | newExpr == expr = (newExpr, newContext)
+    | otherwise = evalBig eval newExpr newContext
+    where
+        (newExpr, newContext) = eval expr context
                         
 {-|
     Big-step evaluation of a list of expressions, starting with
@@ -28,4 +35,4 @@ evalList :: (Expression -> Context -> (Expression, Context))
          -> [Expression]
          -> Context
          -> ([Expression], Context)
-evalList = undefined
+evalList eval exprs context = swap $ mapAccumL (\ctx e -> swap (evalBig eval e ctx)) M.empty exprs

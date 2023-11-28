@@ -135,16 +135,16 @@ name :: Parser String
 name = some letter
 
 varID :: Parser ID
-varID = ID <$> name
+varID = name
 
 var :: Parser Expression
-var = Var <$> varID
+var = Var <$> name
 
 lambda :: Parser Expression
-lambda = Lambda <$> ((spot (=='\\') *> varID) <* (spot (=='.'))) <*> expr
+lambda = Lambda <$> ((token '\\' *> varID) <* (token '.')) <*> expr
 
 application :: Parser Expression
-application = Application <$> ((spot (=='(') *> expr) <* (spot (==' '))) <*> (expr <* spot (==')'))
+application = Application <$> ((token '(' *> expr) <* (token ' ')) <*> (expr <* token ')')
 
 expr :: Parser Expression
 expr = lambda <|> var <|> application
@@ -155,7 +155,7 @@ getExpr (Lambda _ e) = e
 def :: Parser Expression
 def =
   Definition
-    <$> (varID <* spot (=='='))
+    <$> (varID <* token '=')
     <*> expr
 
 
