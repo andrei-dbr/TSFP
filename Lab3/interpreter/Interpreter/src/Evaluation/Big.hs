@@ -4,6 +4,7 @@ import Syntax.Expression
 import Data.List
 import qualified Data.Map as M
 import Data.Tuple (swap)
+import Evaluation.Normal
 
 {-|
     Big-step evaluation of a given expression, within a given context.
@@ -23,7 +24,19 @@ evalBig eval expr context
     | otherwise = evalBig eval newExpr newContext
     where
         (newExpr, newContext) = eval expr context
-                        
+
+evalBigM :: (Expression -> Eval Expression)
+         -> Expression
+         -> Eval Expression
+
+evalBigM evalM expr = do
+    newExpr <- evalM expr
+    if newExpr == expr
+    then
+        return newExpr
+    else
+        evalBigM evalM newExpr
+
 {-|
     Big-step evaluation of a list of expressions, starting with
     the given context and using it throughout the entire list,
@@ -36,3 +49,10 @@ evalList :: (Expression -> Context -> (Expression, Context))
          -> Context
          -> ([Expression], Context)
 evalList eval exprs context = swap $ mapAccumL (\ctx e -> swap (evalBig eval e ctx)) M.empty exprs
+
+
+evalListM :: (Expression -> Eval Expression)
+          -> [Expression]
+          -> Eval [Expression]  
+
+evalListM = mapM . evalBigM
